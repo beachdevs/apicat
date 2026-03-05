@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import fs from 'node:fs';
+import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { fetchApi, fetchWS, getApi, getApis, getFlow } from './fetch.js';
@@ -55,6 +56,21 @@ const cleanApiDefinition = (a) => {
 
 const hasUserConfig = () => fs.existsSync(userConfigPath);
 const resolveConfigPath = (override) => override ?? (hasUserConfig() ? userConfigPath : (fs.existsSync(bundledConfigPath) ? bundledConfigPath : null));
+const ensureUserConfig = async () => {
+  if (configPath || hasUserConfig() || !fs.existsSync(bundledConfigPath) || !process.stdin.isTTY || !process.stdout.isTTY) return;
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = (await rl.question(`Copy apicli.yaml to ${userConfigPath}? [Y/n] `)).trim().toLowerCase();
+    if (answer === '' || answer === 'y' || answer === 'yes') {
+      fs.copyFileSync(bundledConfigPath, userConfigPath);
+      console.error(`Using ${userConfigPath}`);
+    } else {
+      console.error(`Using bundled config at ${bundledConfigPath}`);
+    }
+  } finally {
+    rl.close();
+  }
+};
 const printConfigInfo = () => {
   const p = resolveConfigPath(configPath);
   if (!p) return;
@@ -68,6 +84,8 @@ const searchConfig = (re) => {
     if (re.test(line)) console.log(line);
   }
 };
+
+await ensureUserConfig();
 
 const showConfigInfo = args.length === 0;
 if (showConfigInfo) printConfigInfo();

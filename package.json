@@ -13,8 +13,7 @@
   },
   "type": "module",
   "scripts": {
-    "test": "bun test",
-    "postinstall": "node ./scripts/postinstall.js"
+    "test": "bun test"
   },
   "dependencies": {},
   "author": "",

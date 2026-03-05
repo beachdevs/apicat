@@ -1,5 +1,14 @@
 globalThis.fetch = async (url, init = {}) => {
   const method = init.method ?? 'GET';
+  if (String(url).includes('raw.githubusercontent.com/beachdevs/apicli/refs/heads/master/apicli.yaml')) {
+    return new Response('published.get:\n  url: "https://example.com"\n  method: "GET"\n  headers: {}\n', {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain',
+        'X-Mock-Fetch': '1'
+      }
+    });
+  }
   const payload = {
     url: String(url),
     method,

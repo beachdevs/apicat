@@ -274,6 +274,17 @@ test('CLI - no args reports ~/.apicli when present', () => {
   assert.match(r.stderr, new RegExp(`user:\\s+${escapeRegex(userConfig)}`));
 });
 
+test('CLI - update writes latest published config to ~/.apicli', () => {
+  const home = makeTempHome();
+  const userConfig = join(home, '.apicli');
+  const r = run(['update'], { HOME: home });
+  assert.strictEqual(r.status, 0);
+  assert.match(r.stdout, new RegExp(escapeRegex(userConfig)));
+  assert.strictEqual(fs.existsSync(userConfig), true);
+  const out = Bun.YAML.parse(fs.readFileSync(userConfig, 'utf8'));
+  assert.strictEqual(out['published.get'].url, 'https://example.com');
+});
+
 test('CLI - -h and --help show usage', () => {
   assert.strictEqual(run(['-h']).status, 0);
   assert.strictEqual(run(['--help']).status, 0);

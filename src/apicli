@@ -10,6 +10,7 @@ import { parseYaml, stringifyYaml } from './yaml.js';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const userConfigPath = join(homedir(), '.apicli');
 const bundledConfigPath = join(root, 'apicli.yaml');
+const publishedConfigUrl = 'https://raw.githubusercontent.com/beachdevs/apicli/refs/heads/master/apicli.yaml';
 
 const c = { dim: '\x1b[90m', cyan: '\x1b[36m', yellow: '\x1b[33m', green: '\x1b[32m', bold: '\x1b[1m', reset: '\x1b[0m' };
 
@@ -19,6 +20,7 @@ const usage = `
 ${c.bold}Commands${c.reset}
   ${c.cyan}ls|list${c.reset} [pattern]       List APIs (e.g. ${c.dim}apicli list "openrouter"${c.reset})
   ${c.cyan}fetch${c.reset} <name>            Copy API definition to ${c.dim}./apicli.yaml${c.reset}
+  ${c.cyan}update${c.reset}                  Copy latest published ${c.dim}apicli.yaml${c.reset} to ${c.dim}~/.apicli${c.reset}
   ${c.cyan}help${c.reset} <pattern>          Show matching lines (e.g. ${c.dim}apicli help "httpbin*"${c.reset})
   ${c.green}<service.name>${c.reset} [k=v …]  Call API with optional params
 
@@ -57,10 +59,11 @@ const cleanApiDefinition = (a) => {
 const hasUserConfig = () => fs.existsSync(userConfigPath);
 const resolveConfigPath = (override) => override ?? (hasUserConfig() ? userConfigPath : (fs.existsSync(bundledConfigPath) ? bundledConfigPath : null));
 const ensureUserConfig = async () => {
-  if (configPath || hasUserConfig() || !fs.existsSync(bundledConfigPath) || !process.stdin.isTTY || !process.stdout.isTTY) return;
+  if (arg === 'update' || configPath || hasUserConfig() || !fs.existsSync(bundledConfigPath) || !process.stdin.isTTY || !process.stdout.isTTY) return;
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   try {
-    const answer = (await rl.question(`Copy apicli.yaml to ${userConfigPath}? [Y/n] `)).trim().toLowerCase();
+    const question = `Copy apicli.yaml to ${userConfigPath}? This lets you customize it. If not, apicli will use the file bundled with the package. [Y/n] `;
+    const answer = (await rl.question(question)).trim().toLowerCase();
     if (answer === '' || answer === 'y' || answer === 'yes') {
       fs.copyFileSync(bundledConfigPath, userConfigPath);
       console.error(`Using ${userConfigPath}`);
@@ -70,6 +73,14 @@ const ensureUserConfig = async () => {
   } finally {
     rl.close();
   }
+};
+const updateUserConfig = async () => {
+  const response = await fetch(publishedConfigUrl);
+  if (!response.ok) throw new Error(`Failed to download ${publishedConfigUrl}: ${response.status} ${response.statusText}`);
+  const text = await response.text();
+  parseYaml(text);
+  fs.writeFileSync(userConfigPath, text, 'utf8');
+  console.log(userConfigPath);
 };
 const printConfigInfo = () => {
   const p = resolveConfigPath(configPath);
@@ -108,6 +119,16 @@ if (arg === 'ls' || arg === 'list') {
 if (arg === 'help') {
   const re = new RegExp(pattern.replace(/\*/g, '.*'), 'i');
   searchConfig(re);
+  process.exit(0);
+}
+
+if (arg === 'update') {
+  try {
+    await updateUserConfig();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(1);
+  }
   process.exit(0);
 }
 

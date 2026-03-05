@@ -36,6 +36,9 @@ npx beachdevs/apicli ls httpbin
 npx beachdevs/apicli fetch echo.ws
 npx beachdevs/apicli fetch openai.chat
 
+# Refresh ~/.apicli from the latest published config on GitHub
+npx beachdevs/apicli update
+
 # Use a custom config file
 npx beachdevs/apicli -config ./custom.yaml ls
 npx beachdevs/apicli -config ./custom.yaml httpbin.get
@@ -80,7 +83,7 @@ bun add -g beachdevs/apicli
 npm install beachdevs/apicli
 ```
 
-On first interactive run, `apicli` asks whether it should copy the bundled `apicli.yaml` to `~/.apicli`. If you choose `no`, `apicli` will use the `apicli.yaml` published with the repo until you point it at another file with `-config` or create `~/.apicli`.
+On first interactive run, `apicli` asks whether it should copy the bundled `apicli.yaml` to `~/.apicli` so you can customize it. If you choose `no`, `apicli` will use the API definition file bundled with the package until you point it at another file with `-config` or create `~/.apicli`.
 
 Then call from JavaScript:
 
@@ -140,6 +143,7 @@ echo.ws:
 ## ✅ Notes
 
 - Default config lookup is `~/.apicli`, then the bundled repo `apicli.yaml`.
+- `update` overwrites `~/.apicli` with the latest published `apicli.yaml` from GitHub.
 - `fetch <name>` merges into local `./apicli.yaml` (creates it if missing).
 - `-config <path>` lets you point to any YAML file.
 - `apis.txt` format is still supported for compatibility.

@@ -1,4 +1,6 @@
-[logo](./logo.png)
+<p align="center">
+  <img src="./logo.png" alt="apicat logo" width="220" />
+</p>
 
 `apicat` is a tiny API caller.
 
@@ -29,7 +31,7 @@ npx apicat httpbin.get
 npx apicat openrouter.chat API_KEY=$OPENROUTER_API_KEY MODEL=openai/gpt-4o-mini PROMPT="hello"
 ```
 
-## 🤖 For LLM Prompts. Cli-free!
+## 🤖 apicat for your LLM
 
 No installation required.
 
@@ -170,4 +172,3 @@ echo.ws:
   url: wss://echo-websocket.fly.dev/.ws
   body: $!PROMPT
 ```
-

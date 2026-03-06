@@ -1,6 +1,6 @@
 globalThis.fetch = async (url, init = {}) => {
   const method = init.method ?? 'GET';
-  if (String(url).includes('raw.githubusercontent.com/beachdevs/apicli/refs/heads/master/apicli.yaml')) {
+  if (String(url).includes('raw.githubusercontent.com/beachdevs/apicat/refs/heads/master/.apicat')) {
     return new Response('published.get:\n  url: "https://example.com"\n  method: "GET"\n  headers: {}\n', {
       status: 200,
       headers: {

@@ -1,16 +1,24 @@
 {
-  "name": "apicli",
-  "version": "0.2.2",
+  "name": "apicat",
+  "version": "0.3.1",
   "description": "Quick and flexible API tool for CLI and Bun",
   "repository": {
     "type": "git",
-    "url": "https://github.com/beachdevs/apicli.git"
+    "url": "git+https://github.com/beachdevs/apicat.git"
   },
   "main": "./src/fetch.js",
   "exports": "./src/fetch.js",
   "bin": {
-    "apicli": "./src/apicli"
+    "ac": "ac",
+    "apicat": "apicat"
   },
+  "files": [
+    ".apicat",
+    "ac",
+    "apicat",
+    "README.md",
+    "src/"
+  ],
   "type": "module",
   "scripts": {
     "test": "bun test"

@@ -8,7 +8,7 @@ import * as api from '../src/fetch.js';
 
 const testsDir = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(testsDir, '..');
-const cli = join(projectRoot, 'src', 'apicli');
+const cli = join(projectRoot, 'ac');
 const configPath = join(testsDir, 'test-apis.yaml');
 const mockFetchPath = join(testsDir, 'mock-fetch.js');
 const tempHomes = [];
@@ -258,25 +258,25 @@ test('CLI - no args shows usage', () => {
   assert.match(r.stdout, /Options/);
 });
 
-test('CLI - no args reports bundled config when ~/.apicli is missing', () => {
+test('CLI - no args reports bundled config when ~/.apicat is missing', () => {
   const home = makeTempHome();
   const r = run([], { HOME: home });
   assert.strictEqual(r.status, 0);
-  assert.match(r.stderr, new RegExp(`bundled:\\s+${escapeRegex(join(projectRoot, 'apicli.yaml'))}`));
+  assert.match(r.stderr, new RegExp(`bundled:\\s+${escapeRegex(join(projectRoot, '.apicat'))}`));
 });
 
-test('CLI - no args reports ~/.apicli when present', () => {
+test('CLI - no args reports ~/.apicat when present', () => {
   const home = makeTempHome();
-  const userConfig = join(home, '.apicli');
+  const userConfig = join(home, '.apicat');
   fs.writeFileSync(userConfig, 'local.get:\n  url: "https://example.com"\n  method: "GET"\n  headers: {}');
   const r = run([], { HOME: home });
   assert.strictEqual(r.status, 0);
   assert.match(r.stderr, new RegExp(`user:\\s+${escapeRegex(userConfig)}`));
 });
 
-test('CLI - update writes latest published config to ~/.apicli', () => {
+test('CLI - update writes latest published config to ~/.apicat', () => {
   const home = makeTempHome();
-  const userConfig = join(home, '.apicli');
+  const userConfig = join(home, '.apicat');
   const r = run(['update'], { HOME: home });
   assert.strictEqual(r.status, 0);
   assert.match(r.stdout, new RegExp(escapeRegex(userConfig)));
@@ -385,9 +385,9 @@ test('CLI - -time prints duration', () => {
   JSON.parse(r.stdout);
 });
 
-test('CLI - fetch writes API definition to local apicli.yaml', () => {
-  const outPath = join(projectRoot, 'apicli.yaml');
-  const backupPath = join(projectRoot, 'apicli.yaml.test-backup');
+test('CLI - fetch writes API definition to local .apicat', () => {
+  const outPath = join(projectRoot, '.apicat');
+  const backupPath = join(projectRoot, '.apicat.test-backup');
   const hadOriginal = fs.existsSync(outPath);
   if (hadOriginal) fs.copyFileSync(outPath, backupPath);
   fs.writeFileSync(outPath, 'existing.api:\n  url: "https://example.com"\n  method: "GET"\n');

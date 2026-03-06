@@ -13,8 +13,8 @@ const ALIASES = {
 };
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const userConfigPath = () => join(homedir(), '.apicli');
-const bundledConfigPath = join(root, 'apicli.yaml');
+const userConfigPath = () => join(homedir(), '.apicat');
+const bundledConfigPath = join(root, '.apicat');
 const isReadableFile = (path) => {
   try {
     return fs.statSync(path).isFile();

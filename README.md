@@ -1,108 +1,128 @@
-# apicli
+# apicat
 
-⚡ A fast CLI + code library for calling API definitions from a single YAML file.
+`apicat` gives you a tiny API toolbox with one short command: `ac`.
 
-## 🚀 Quick Start
+Keep your API definitions in a single `.apicat` file, then list them, inspect them, and call them from the CLI or from JavaScript. It works well for quick experiments, repeatable API calls, and "what was that curl again?" moments.
+
+## Why It’s Nice
+
+- One command: `ac`
+- One config file: `.apicat`
+- HTTP and WebSocket support
+- Variables with `$VAR` and required variables with `$!VAR`
+- Works as both a CLI and a library
+
+## Quick Start
+
+Install it:
 
 ```bash
-npx beachdevs/apicli catfact.getFact
+npm install -g apicat
+# or
+bun add -g apicat
 ```
 
-`apicli` API IDs use `<service>.<name>` (for example `httpbin.get`, `openai.chat`, `echo.ws`).
-
-- Supports HTTP(S) and WebSocket endpoints.
-- Pass runtime params as `KEY=value`.
-- Use `$VAR` for optional variables and `$!VAR` for required variables in templates.
-- Works from CLI and from code.
-
-## 🤖 Use From LLMs
-
-Prompt:
-
-`Learn api definitions from https://raw.githubusercontent.com/beachdevs/apicli/refs/heads/master/apicli.yaml`
-
-## 🧭 CLI Usage
+Then use it:
 
 ```bash
-# Show help/options
-npx beachdevs/apicli
-
-# List APIs
-npx beachdevs/apicli ls
-npx beachdevs/apicli list openai
-npx beachdevs/apicli ls httpbin
-
-# Copy one API definition into local ./apicli.yaml
-npx beachdevs/apicli fetch echo.ws
-npx beachdevs/apicli fetch openai.chat
-
-# Refresh ~/.apicli from the latest published config on GitHub
-npx beachdevs/apicli update
-
-# Use a custom config file
-npx beachdevs/apicli -config ./custom.yaml ls
-npx beachdevs/apicli -config ./custom.yaml httpbin.get
-
-# Show matching config lines
-npx beachdevs/apicli help httpbin
-
-# Call an API with params
-npx beachdevs/apicli httpbin.get foo=bar
-
-# Time + debug
-npx beachdevs/apicli -time httpbin.get
-npx beachdevs/apicli -debug httpbin.get
+npx apicat
+ac ls
+ac httpbin.get
+ac openrouter.chat API_KEY=$OPENROUTER_API_KEY MODEL=openai/gpt-4o-mini PROMPT="hello"
 ```
 
-## 🔑 Auth + Params Examples
+`npx apicat` and `ac` hit the same CLI.
 
-Parameters with matching environment variables are populated automatically if you don't pass them explicitly.
+API IDs use `<service>.<name>` form, like `httpbin.get`, `openai.chat`, or `echo.ws`.
+
+## The Shape Of It
+
+`ac` looks for config in this order:
+
+1. `-config <path>`
+2. `~/.apicat`
+3. the bundled `.apicat`
+
+On first interactive run, it can copy the bundled `.apicat` to `~/.apicat` so you have your own editable version.
+
+## CLI Cheatsheet
 
 ```bash
-# OpenAI-compatible
-npx beachdevs/apicli openai.chat \
+# show help
+ac
+
+# list APIs
+ac ls
+ac list openai
+ac ls httpbin
+
+# show matching config lines
+ac help httpbin
+
+# use a custom config
+ac -config ./custom.yaml ls
+ac -config ./custom.yaml httpbin.get
+
+# call an API with runtime vars
+ac httpbin.get foo=bar
+ac -time httpbin.get
+ac -debug httpbin.get
+
+# copy one API definition into local ./.apicat
+ac fetch echo.ws
+ac fetch openai.chat
+
+# refresh ~/.apicat from the published config
+ac update
+```
+
+## A Few Good Examples
+
+```bash
+# OpenAI-compatible API
+ac openai.chat \
   OPENAI_COMPATIBLE_BASE_URL=https://api.openai.com/v1 \
   OPENAI_COMPATIBLE_API_KEY=$OPENAI_API_KEY \
   MODEL=gpt-4o-mini \
-  PROMPT="Hello"
+  PROMPT="Write a haiku about logs"
 
-# OpenRouter with optional provider
-npx beachdevs/apicli openrouter.chat \
+# OpenRouter
+ac openrouter.chat \
   API_KEY=$OPENROUTER_API_KEY \
   MODEL=openai/gpt-4o-mini \
   PROVIDER=openai \
-  PROMPT="Hello"
+  PROMPT="Say hello"
+
+# simple GET
+ac httpbin.get
 ```
 
-## 🧩 Use In Code
+Parameters automatically fall back to matching environment variables when possible.
 
-Install with Bun or npm:
+## Use It From Code
+
+Install it locally if you want to import it:
 
 ```bash
-bun add -g beachdevs/apicli
-npm install beachdevs/apicli
+npm install apicat
+# or
+bun add apicat
 ```
 
-On first interactive run, `apicli` asks whether it should copy the bundled `apicli.yaml` to `~/.apicli` so you can customize it. If you choose `no`, `apicli` will use the API definition file bundled with the package until you point it at another file with `-config` or create `~/.apicli`.
-
-Then call from JavaScript:
+Then:
 
 ```javascript
-import { fetchApi, getRequest, getApis } from 'apicli';
+import { fetchApi, getApis, getRequest } from 'apicat';
 
-// List loaded API definitions
 const apis = getApis();
+console.log(apis.map((api) => api.id));
 
-// Build request without sending
 const req = getRequest('httpbin', 'get');
 console.log(req.url);
 
-// Send request
 const res = await fetchApi('httpbin', 'get');
-const data = await res.json();
-console.log(data.url);
+console.log(await res.json());
 
-// With variables
 const chat = await fetchApi('openai', 'chat', {
   vars: {
     OPENAI_COMPATIBLE_BASE_URL: 'https://api.openai.com/v1',
@@ -111,12 +131,13 @@ const chat = await fetchApi('openai', 'chat', {
     PROMPT: 'Hello world'
   }
 });
+
 console.log(await chat.json());
 ```
 
-`fetchApi` returns a standard `Response` object, so you can also use `status`, `ok`, `headers`, `text()`, `arrayBuffer()`, and other Fetch response APIs.
+`fetchApi` returns a normal Fetch `Response`, so you can use `status`, `ok`, `headers`, `text()`, `json()`, and the rest of the usual response methods.
 
-## 🗂️ Config Format (`apicli.yaml`)
+## The `.apicat` File
 
 Top-level keys are `service.name`.
 
@@ -140,10 +161,16 @@ echo.ws:
   body: $!PROMPT
 ```
 
-## ✅ Notes
+`fetch <name>` merges a definition into local `./.apicat`, creating it if needed.
 
-- Default config lookup is `~/.apicli`, then the bundled repo `apicli.yaml`.
-- `update` overwrites `~/.apicli` with the latest published `apicli.yaml` from GitHub.
-- `fetch <name>` merges into local `./apicli.yaml` (creates it if missing).
-- `-config <path>` lets you point to any YAML file.
-- `apis.txt` format is still supported for compatibility.
+## For LLM Prompts
+
+If you want a model to learn your API definitions, point it at:
+
+`https://raw.githubusercontent.com/beachdevs/apicat/refs/heads/master/.apicat`
+
+## Notes
+
+- `update` overwrites `~/.apicat` with the latest published `.apicat`
+- `-config <path>` can point at any YAML file
+- `apis.txt` is still supported for compatibility

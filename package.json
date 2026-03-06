@@ -1,20 +1,21 @@
 {
   "name": "apicat",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "description": "Quick and flexible API tool for CLI and Bun",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/beachdevs/apicat.git"
   },
   "main": "./src/fetch.js",
+  "unpkg": "./.apicat",
   "exports": "./src/fetch.js",
   "bin": {
-    "ac": "ac",
+    "apic": "apic",
     "apicat": "apicat"
   },
   "files": [
     ".apicat",
-    "ac",
+    "apic",
     "apicat",
     "README.md",
     "src/"

@@ -8,7 +8,7 @@ import * as api from '../src/fetch.js';
 
 const testsDir = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(testsDir, '..');
-const cli = join(projectRoot, 'ac');
+const cli = join(projectRoot, 'apic');
 const configPath = join(testsDir, 'test-apis.yaml');
 const mockFetchPath = join(testsDir, 'mock-fetch.js');
 const tempHomes = [];

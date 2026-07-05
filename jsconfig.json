@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "NodeNext",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "checkJs": true,
+    "types": ["node"]
+  },
+  "exclude": ["node_modules", ".git", "bun.lock"]
+}

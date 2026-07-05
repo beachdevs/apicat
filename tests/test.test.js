@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import * as api from '../src/fetch.js';
+import { ensureUserConfig, defaultUserConfigPath } from '../src/install.js';
 
 const testsDir = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(testsDir, '..');
@@ -84,6 +85,52 @@ test.after(() => {
   globalThis.fetch = originalFetch;
   if (fs.existsSync(configPath)) fs.unlinkSync(configPath);
   for (const dir of tempHomes) fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('install.js - ensureUserConfig prompts when no ~/.apicat exists', async () => {
+  const tempHome = makeTempHome();
+  const configPath = join(tempHome, '.apicat');
+  const responses = ['y'];
+  const rl = {
+    question: async () => responses.shift(),
+    close: () => {}
+  };
+  const copied = [];
+  await ensureUserConfig({
+    arg: undefined,
+    configPath: null,
+    userConfigPath: configPath,
+    bundledConfigPath: join(projectRoot, '.apicat'),
+    createInterfaceFn: () => rl,
+    hasUserConfig: () => false,
+    bundledExists: () => true,
+    stdinIsTTY: true,
+    stdoutIsTTY: true,
+    copyFile: (src, dest) => copied.push({ src, dest }),
+    stderr: () => {}
+  });
+  assert.deepStrictEqual(copied, [{ src: join(projectRoot, '.apicat'), dest: configPath }]);
+});
+
+test('install.js - ensureUserConfig skips copy when ~/.apicat exists', async () => {
+  const tempHome = makeTempHome();
+  const configPath = join(tempHome, '.apicat');
+  fs.writeFileSync(configPath, 'existing: true');
+  const copied = [];
+  await ensureUserConfig({
+    arg: undefined,
+    configPath: null,
+    userConfigPath: configPath,
+    bundledConfigPath: join(projectRoot, '.apicat'),
+    createInterfaceFn: () => ({ question: async () => 'y', close: () => {} }),
+    hasUserConfig: () => true,
+    bundledExists: () => true,
+    stdinIsTTY: true,
+    stdoutIsTTY: true,
+    copyFile: (src, dest) => copied.push({ src, dest }),
+    stderr: () => {}
+  });
+  assert.deepStrictEqual(copied, []);
 });
 
 test('fetch.js - getApis', () => {

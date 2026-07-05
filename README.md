@@ -41,7 +41,7 @@ If you want a model to learn your API definitions, tell it:
 
 
 
-Variables can be defined in the call or will be used if named the same in env.
+Variables can be defined in the call or will be used if named the same in env. `API_KEY` also falls back to `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, or `CEREBRAS_API_KEY`.
 
 API IDs use `<service>.<name>` form, like `httpbin.get`, `openai.chat`, or `echo.ws`.
 

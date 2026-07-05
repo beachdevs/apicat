@@ -4,12 +4,11 @@ import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { fetchApi, fetchWS, getApi, getApis, getFlow } from './fetch.js';
-import { homedir } from 'node:os';
+import { ensureUserConfig, defaultUserConfigPath, defaultBundledConfigPath } from './install.js';
 import { parseYaml, stringifyYaml } from './yaml.js';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const userConfigPath = join(homedir(), '.apicat');
-const bundledConfigPath = join(root, '.apicat');
+const userConfigPath = defaultUserConfigPath;
+const bundledConfigPath = defaultBundledConfigPath;
 const publishedConfigUrl = 'https://raw.githubusercontent.com/beachdevs/apicat/refs/heads/master/.apicat';
 
 const c = { dim: '\x1b[90m', cyan: '\x1b[36m', yellow: '\x1b[33m', green: '\x1b[32m', bold: '\x1b[1m', reset: '\x1b[0m' };
@@ -56,24 +55,8 @@ const cleanApiDefinition = (a) => {
   return rest;
 };
 
-const hasUserConfig = () => fs.existsSync(userConfigPath);
+const hasUserConfig = (path = userConfigPath) => fs.existsSync(path);
 const resolveConfigPath = (override) => override ?? (hasUserConfig() ? userConfigPath : (fs.existsSync(bundledConfigPath) ? bundledConfigPath : null));
-const ensureUserConfig = async () => {
-  if (arg === 'update' || configPath || hasUserConfig() || !fs.existsSync(bundledConfigPath) || !process.stdin.isTTY || !process.stdout.isTTY) return;
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    const question = `Copy .apicat to ${userConfigPath}? This lets you customize it. If not, apic will use the file bundled with the package. [Y/n] `;
-    const answer = (await rl.question(question)).trim().toLowerCase();
-    if (answer === '' || answer === 'y' || answer === 'yes') {
-      fs.copyFileSync(bundledConfigPath, userConfigPath);
-      console.error(`Using ${userConfigPath}`);
-    } else {
-      console.error(`Using bundled config at ${bundledConfigPath}`);
-    }
-  } finally {
-    rl.close();
-  }
-};
 const updateUserConfig = async () => {
   const response = await fetch(publishedConfigUrl);
   if (!response.ok) throw new Error(`Failed to download ${publishedConfigUrl}: ${response.status} ${response.statusText}`);
@@ -96,7 +79,7 @@ const searchConfig = (re) => {
   }
 };
 
-await ensureUserConfig();
+await ensureUserConfig({ arg, configPath });
 
 const showConfigInfo = args.length === 0;
 if (showConfigInfo) printConfigInfo();

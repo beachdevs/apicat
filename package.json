@@ -1,6 +1,6 @@
 {
   "name": "apicat",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Quick and flexible API tool for CLI and Bun",
   "repository": {
     "type": "git",
@@ -25,7 +25,9 @@
   "scripts": {
     "test": "bun test"
   },
-  "dependencies": {},
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^26.1.0"
+  }
 }

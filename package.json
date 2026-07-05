@@ -29,5 +29,8 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^26.1.0"
+  },
+  "dependencies": {
+    "apicat": "^0.3.5"
   }
 }

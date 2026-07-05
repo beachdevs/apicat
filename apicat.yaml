@@ -34,3 +34,14 @@ openrouter.chat:
       "messages": [{"role": "user", "content": "$OPTIONAL_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
       , "provider": {"order": ["$PROVIDER"]}
     }
+
+cerebras.chat:
+  url: https://api.cerebras.net/v1/chat/completions
+  method: POST
+  headers:
+    Authorization: "Bearer $!API_KEY"
+  body: |
+    {
+      "model": "$!MODEL",
+      "messages": [{"role": "system", "content": "$SYSTEM_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
+    }

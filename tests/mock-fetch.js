@@ -9,6 +9,24 @@ globalThis.fetch = async (url, init = {}) => {
       }
     });
   }
+  if (String(url).includes('invalid-json')) {
+    return new Response('not valid json', {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain',
+        'X-Mock-Fetch': '1'
+      }
+    });
+  }
+  if (String(url).includes('ndjson')) {
+    return new Response('{"value":1}\n{"value":2}\n', {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/x-ndjson',
+        'X-Mock-Fetch': '1'
+      }
+    });
+  }
   const payload = {
     url: String(url),
     method,

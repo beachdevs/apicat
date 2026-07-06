@@ -9,14 +9,15 @@ catfact.getFact:
   headers: {}
 
 openai.chat:
-  url: $!OPENAI_COMPATIBLE_BASE_URL/chat/completions
-  method: POST
+  url: $!OPENAI_URL/api/generate
   headers:
-    Authorization: "Bearer $!OPENAI_COMPATIBLE_API_KEY"
+    Authorization: "Bearer $!OPENAI_API_KEY"
   body: |
     {
       "model": "$!MODEL",
-      "messages": [{"role": "system", "content": "$SYSTEM_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
+      "messages": [{"role": "system", "content": "$SYSTEM_PROMPT"}, {"role": "user", "content": "$!PROMPT"}],
+      "think": false,
+      "stream": false
     }
 
 echo.ws:
@@ -45,3 +46,9 @@ cerebras.chat:
       "model": "$!MODEL",
       "messages": [{"role": "system", "content": "$SYSTEM_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
     }
+
+ollama.localmodels:
+  url: http://localhost:11434/api/tags
+  method: GET
+  headers:
+    Authorization: "Bearer $!API_KEY"

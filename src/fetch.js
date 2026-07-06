@@ -135,6 +135,26 @@ const buildWsRequest = (api, vars = {}) => {
   return { url, headers, body, keep_alive, timeout, capture };
 };
 
+export function parseJsonResponse(text) {
+  const raw = String(text ?? '').trim();
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const parts = raw.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+    if (!parts.length) return null;
+    const parsed = [];
+    for (const part of parts) {
+      try {
+        parsed.push(JSON.parse(part));
+      } catch {
+        throw new Error(`Failed to parse JSON. Received text: ${text}`);
+      }
+    }
+    return parsed.length === 1 ? parsed[0] : parsed;
+  }
+}
+
 export async function fetchApi(s, n, opts = {}) {
   const { vars = {}, configPath, debug, ...rest } = opts;
   const req = getRequest(s, n, { ...vars, ...rest }, configPath);
@@ -237,8 +257,9 @@ export async function fetchWS(s, n, opts = {}) {
 export async function get(id, opts = {}) {
   const [s, n] = id.split('.'), res = await fetchApi(s, n, opts);
   const text = await res.text();
+  const parsed = parseJsonResponse(text);
   return {
-    json: (q) => q ? runJq(q, text) : JSON.parse(text),
+    json: (q) => q ? runJq(q, typeof parsed === 'string' ? parsed : JSON.stringify(parsed)) : parsed,
     text: () => text
   };
 }

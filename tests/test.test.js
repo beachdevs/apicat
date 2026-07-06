@@ -390,6 +390,34 @@ test('CLI - service call (mock network)', () => {
   assert.strictEqual(json.url, 'https://httpbin.org/get');
 });
 
+test('CLI - invalid JSON response shows received text', () => {
+  const tmpPath = join(testsDir, 'tmp-invalid-json.yaml');
+  fs.writeFileSync(tmpPath, 'invalidjson.get:\n  url: "https://example.invalid/invalid-json"\n  method: "GET"\n  headers: {}');
+  try {
+    const r = run(['-config', tmpPath, 'invalidjson.get']);
+    assert.strictEqual(r.status, 1);
+    assert.match(r.stderr, /Failed to parse JSON/);
+    assert.match(r.stderr, /not valid json/i);
+  } finally {
+    fs.unlinkSync(tmpPath);
+  }
+});
+
+test('CLI - newline-delimited JSON responses are parsed', () => {
+  const tmpPath = join(testsDir, 'tmp-ndjson.yaml');
+  fs.writeFileSync(tmpPath, 'ndjson.get:\n  url: "https://example.invalid/ndjson"\n  method: "GET"\n  headers: {}');
+  try {
+    const r = run(['-config', tmpPath, 'ndjson.get']);
+    assert.strictEqual(r.status, 0);
+    const parsed = JSON.parse(r.stdout);
+    assert.ok(Array.isArray(parsed));
+    assert.strictEqual(parsed.length, 2);
+    assert.deepStrictEqual(parsed.map(item => item.value), [1, 2]);
+  } finally {
+    fs.unlinkSync(tmpPath);
+  }
+});
+
 test('CLI - service call with params', () => {
   const r = run(['-config', configPath, 'httpbin.get', 'foo=bar']);
   assert.strictEqual(r.status, 0);

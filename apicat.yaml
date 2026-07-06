@@ -9,9 +9,21 @@ catfact.getFact:
   headers: {}
 
 openai.chat:
-  url: $!OPENAI_URL/api/generate
+  url: $!OPENAI_URL/v1/chat/completions
   headers:
     Authorization: "Bearer $!OPENAI_API_KEY"
+  body: |
+    {
+      "model": "$!MODEL",
+      "messages": [{"role": "system", "content": "$SYSTEM_PROMPT"}, {"role": "user", "content": "$!PROMPT"}],
+      "think": false,
+      "stream": false
+    }
+
+ollama.chat:
+  url: http://localhost:11434/api/generate
+  headers:
+    Content-Type: "application/json"
   body: |
     {
       "model": "$!MODEL",

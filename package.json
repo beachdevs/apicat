@@ -1,6 +1,6 @@
 {
   "name": "apicat",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Quick and flexible API tool for CLI and Bun",
   "repository": {
     "type": "git",

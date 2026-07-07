@@ -7,7 +7,7 @@ import { homedir } from 'node:os';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const defaultUserConfigPath = join(homedir(), '.apicat');
-export const defaultBundledConfigPath = join(root, '.apicat');
+export const defaultBundledConfigPath = join(root, 'apicat.yaml');
 
 export async function ensureUserConfig(options = {}) {
   const {

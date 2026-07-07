@@ -4,7 +4,7 @@
 
 `apicat` is a tiny API caller.
 
-Keep your API definitions in one `.apicat` file, then list them, inspect them, and fire them off from the CLI or from JavaScript. It is built for quick experiments, repeatable calls, and "what was that curl again?" moments.
+Keep your API definitions in YAML, then list them, inspect them, and fire them off from the CLI or from JavaScript. It is built for quick experiments, repeatable calls, and "what was that curl again?" moments.
 
 ## ⚡ Quick Start
 
@@ -12,7 +12,7 @@ Keep your API definitions in one `.apicat` file, then list them, inspect them, a
 npx apicat <ls | service.name> KEY=VALUE
 ```
 
-or install..
+or install:
 
 ```bash
 npm install -g apicat
@@ -48,14 +48,16 @@ API IDs use `<service>.<name>` form, like `httpbin.get`, `openai.chat`, or `echo
 ## 🎉 API goodness
 
 - One command: `apic`
-- One config file: `.apicat`
+- One bundled config file: `apicat.yaml`
+- Optional user config: `~/.apicat`
 - HTTP and WebSocket support
 - Variables with `$VAR` and required variables with `$!VAR`
-- Works as both a CLI and a library
+- Works as a CLI, a library, and an exported CLI module
+- No package dependencies or lockfile
 
 ## 🧠 How It Thinks
 
-On first interactive run, it can copy the bundled `.apicat` to `~/.apicat` so you have your own editable version instead of poking at the packaged one.
+On first interactive run, it can copy the bundled `apicat.yaml` to `~/.apicat` so you have your own editable version instead of poking at the packaged one.
 
 ## 🧰 CLI Cheatsheet
 
@@ -67,6 +69,8 @@ apic
 apic ls
 apic list openai
 apic ls httpbin
+
+# ls prints a blank line before and after the colored entries
 
 # grep, but friendlier
 apic help httpbin
@@ -80,11 +84,7 @@ apic httpbin.get foo=bar
 apic -time httpbin.get
 apic -debug httpbin.get
 
-# steal one definition into local ./.apicat
-apic fetch echo.ws
-apic fetch openai.chat
-
-# refresh ~/.apicat from the published config
+# refresh ~/.apicat from the published apicat.yaml
 apic update
 ```
 
@@ -93,8 +93,8 @@ apic update
 ```bash
 # OpenAI-compatible chat
 apic openai.chat \
-  OPENAI_COMPATIBLE_BASE_URL=https://api.openai.com/v1 \
-  OPENAI_COMPATIBLE_API_KEY=$OPENAI_API_KEY \
+  OPENAI_URL=https://api.openai.com \
+  OPENAI_API_KEY=$OPENAI_API_KEY \
   MODEL=gpt-4o-mini \
   PROMPT="Write a haiku about logs"
 
@@ -137,8 +137,8 @@ console.log(await res.json());
 
 const chat = await fetchApi('openai', 'chat', {
   vars: {
-    OPENAI_COMPATIBLE_BASE_URL: 'https://api.openai.com/v1',
-    OPENAI_COMPATIBLE_API_KEY: process.env.OPENAI_API_KEY,
+    OPENAI_URL: 'https://api.openai.com',
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     MODEL: 'gpt-4o-mini',
     PROMPT: 'Hello world'
   }
@@ -149,7 +149,15 @@ console.log(await chat.json());
 
 `fetchApi` returns a normal Fetch `Response`, so you can use `status`, `ok`, `headers`, `text()`, `json()`, and the rest of the usual response methods.
 
-## 📜 The `.apicat` Spellbook
+You can also import the CLI runner directly:
+
+```javascript
+import { runCli } from 'apicat/cli';
+
+const code = await runCli(['ls']);
+```
+
+## 📜 The `apicat.yaml` Spellbook
 
 Top-level keys are `service.name`.
 
@@ -160,13 +168,16 @@ httpbin.get:
   headers: {}
 
 openai.chat:
-  url: https://api.openai.com/v1/chat/completions
-  method: POST
+  url: $!OPENAI_URL/v1/chat/completions
   headers:
-    Authorization: "Bearer $!API_KEY"
-    Content-Type: application/json
+    Authorization: "Bearer $!OPENAI_API_KEY"
   body: |
-    {"model":"$!MODEL","messages":[{"role":"user","content":"$!PROMPT"}]}
+    {
+      "model": "$!MODEL",
+      "messages": [{"role": "system", "content": "$SYSTEM_PROMPT"}, {"role": "user", "content": "$!PROMPT"}],
+      "think": false,
+      "stream": false
+    }
 
 echo.ws:
   url: wss://echo-websocket.fly.dev/.ws

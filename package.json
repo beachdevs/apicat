@@ -8,13 +8,15 @@
   },
   "main": "./src/fetch.js",
   "unpkg": "./apicat.yaml",
-  "exports": "./src/fetch.js",
+  "exports": {
+    ".": "./src/fetch.js",
+    "./cli": "./src/cli.js"
+  },
   "bin": {
     "apic": "apic",
     "apicat": "apicat"
   },
   "files": [
-    ".apicat",
     "apicat.yaml",
     "apic",
     "apicat",
@@ -26,11 +28,5 @@
     "test": "bun test"
   },
   "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/node": "^26.1.0"
-  },
-  "dependencies": {
-    "apicat": "^0.3.5"
-  }
+  "license": "ISC"
 }

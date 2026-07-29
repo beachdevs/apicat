@@ -1,13 +1,14 @@
 import fs from 'node:fs';
-import { fetchApi, fetchWS, getApi, getApis, getFlow, parseJsonResponse } from './fetch.js';
+import { fetchApi, fetchWS, getApi, getApis, getFlow, parseJsonResponse, runJq } from './fetch.js';
 import { ensureUserConfig, defaultUserConfigPath, defaultBundledConfigPath } from './install.js';
 import { parseYaml } from './yaml.js';
 
 const publishedConfigUrl = 'https://raw.githubusercontent.com/beachdevs/apicat/refs/heads/master/apicat.yaml';
 const c = { dim: '\x1b[90m', cyan: '\x1b[36m', green: '\x1b[32m', bold: '\x1b[1m', reset: '\x1b[0m' };
+const { version } = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
 export const usage = `
-🔌 ${c.bold}apicat${c.reset} ${c.dim}— call APIs (${c.cyan}apic${c.reset})${c.reset}
+🔌 ${c.bold}apicat${c.reset} ${c.dim}v${version} — call APIs (${c.cyan}apic${c.reset})${c.reset}
 
 ${c.bold}Commands${c.reset}
   ${c.cyan}ls|list${c.reset} [pattern]       List APIs (e.g. ${c.dim}apic list "openrouter"${c.reset})
@@ -26,11 +27,13 @@ ${c.bold}Example${c.reset}
   ${c.dim}apic -debug httpbin.get${c.reset}
 `;
 
+export const formatResponse = (text, jq) => jq ? runJq(jq, text).trimEnd() : JSON.stringify(parseJsonResponse(text), null, 2);
+
 export const parseArgs = (raw = []) => {
   const configIdx = raw.findIndex(a => a === '-config' || a === '--config');
   if (configIdx >= 0 && (!raw[configIdx + 1] || raw[configIdx + 1].startsWith('-'))) return { error: 'Error: -config requires a file path' };
-  const args = raw.filter((a, i) => !['-time', '--time', '-debug', '--debug'].includes(a) && !(configIdx >= 0 && (i === configIdx || i === configIdx + 1)));
-  return { args, arg: args[0], pattern: args[1] ?? '.', time: raw.includes('-time') || raw.includes('--time'), debug: raw.includes('-debug') || raw.includes('--debug'), configPath: configIdx >= 0 ? raw[configIdx + 1] : null };
+  const args = raw.filter((a, i) => !['-time', '--time', '-debug', '--debug', '-h', '--help'].includes(a) && !(configIdx >= 0 && (i === configIdx || i === configIdx + 1)));
+  return { args, arg: args[0], pattern: args[1] ?? '.', time: raw.includes('-time') || raw.includes('--time'), debug: raw.includes('-debug') || raw.includes('--debug'), help: raw.includes('-h') || raw.includes('--help'), configPath: configIdx >= 0 ? raw[configIdx + 1] : null };
 };
 
 export async function runCli(raw = process.argv.slice(2), io = {}) {
@@ -39,7 +42,7 @@ export async function runCli(raw = process.argv.slice(2), io = {}) {
   const bundledConfigPath = io.bundledConfigPath ?? defaultBundledConfigPath;
   const hasUser = () => fs.existsSync(userConfigPath);
   const cfg = (p) => p ?? (hasUser() ? userConfigPath : (fs.existsSync(bundledConfigPath) ? bundledConfigPath : null));
-  const { error, args, arg, pattern, time, debug, configPath } = parseArgs(raw);
+  const { error, args, arg, pattern, time, debug, help, configPath } = parseArgs(raw);
   const re = (s) => new RegExp(s.replace(/\*/g, '.*'), 'i');
   const printConfig = () => { const p = cfg(configPath); if (p) err(configPath ? 'config:' : hasUser() ? 'user:   ' : 'bundled:', p); };
   const search = (rx) => { const p = cfg(configPath); if (p && fs.existsSync(p)) for (const l of fs.readFileSync(p, 'utf8').split('\n')) if (rx.test(l)) out(l); };
@@ -55,7 +58,7 @@ export async function runCli(raw = process.argv.slice(2), io = {}) {
   if (error) return err(error), 1;
   await ensureUserConfig({ arg, configPath, userConfigPath, bundledConfigPath });
   if (!args.length) printConfig();
-  if (!arg || arg === '-h' || arg === '--help') return out(usage), 0;
+  if (!arg) return out(usage), 0;
   if (arg === 'ls' || arg === 'list') {
     out('');
     for (const a of getApis(cfg(configPath))) {
@@ -74,6 +77,7 @@ export async function runCli(raw = process.argv.slice(2), io = {}) {
   const p = cfg(configPath), [service, name] = arg.split('.'), params = Object.fromEntries(args.slice(1).map(a => [a.slice(0, a.indexOf('=')), a.slice(a.indexOf('=') + 1)]).filter(([k]) => k));
   const { base, steps } = getFlow(service, name, p), api = base ?? getApi(service, name, p);
   if (!api && !steps.length) return err('Unknown API:', arg), 1;
+  if (help) return out(base?.help ?? api?.help ?? steps[0]?.help ?? 'No help available.'), 0;
   const isWs = steps.length || String(api?.url ?? '').startsWith('ws');
   const hasBody = api?.body != null && String(api.body).trim() !== '';
   const jsonPost = api?.method === 'POST' && (typeof api.headers === 'string' ? /json|^bearer /i.test(api.headers) : Object.entries(api?.headers || {}).some(([k, v]) => k.toLowerCase() === 'content-type' && String(v).toLowerCase().includes('json')));
@@ -82,7 +86,10 @@ export async function runCli(raw = process.argv.slice(2), io = {}) {
   try {
     const t0 = time ? process.hrtime.bigint() : null;
     if (isWs) await fetchWS(service, name, { ...opts, onMessage: (_msg, ctx) => out(ctx.raw) });
-    else out(JSON.stringify(parseJsonResponse(await (await fetchApi(service, name, opts)).text()), null, 2));
+    else {
+      const text = await (await fetchApi(service, name, opts)).text();
+      out(formatResponse(text, api?.jq));
+    }
     if (t0) err(`\x1b[90m%ims\x1b[0m`, (Number(process.hrtime.bigint() - t0) / 1e6).toFixed(0));
     return 0;
   } catch (e) {

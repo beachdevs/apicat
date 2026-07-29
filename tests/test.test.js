@@ -1,12 +1,40 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { runCli } from '../src/cli.js';
+import { formatResponse, runCli } from '../src/cli.js';
+import { getApis } from '../src/fetch.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const config = join(root, 'apicat.yaml');
+const { version } = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+
+test('cli usage includes the package version', async () => {
+  const output = [];
+  const code = await runCli([], { out: value => output.push(value) });
+
+  assert.strictEqual(code, 0);
+  assert.match(output.join('\n'), new RegExp(`apicat\\x1b\\[0m \\x1b\\[90mv${version} — call APIs`));
+});
+
+test('api help prints the YAML help text without making a request', async () => {
+  const output = [];
+  const code = await runCli(['-config', config, 'httpbin.get', '--help'], {
+    out: value => output.push(value)
+  });
+
+  assert.strictEqual(code, 0);
+  assert.deepStrictEqual(output, ['Send a GET request to httpbin.org/get.']);
+});
+
+test('jq API field prints raw selected output', () => {
+  const catfact = getApis(config).find(api => api.id === 'catfact.getFact');
+
+  assert.strictEqual(catfact.jq, '.fact');
+  assert.strictEqual(formatResponse('{"fact":"Cats purr."}', catfact.jq), 'Cats purr.');
+});
 
 test('cli.js module and apicli executable list APIs', async () => {
   const moduleOut = [];

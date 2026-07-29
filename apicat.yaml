@@ -2,11 +2,14 @@ httpbin.get:
   url: https://httpbin.org/get
   method: GET
   headers: {}
+  help: Send a GET request to httpbin.org/get.
 
 catfact.getFact:
   url: https://catfact.ninja/fact
   method: GET
   headers: {}
+  jq: .fact
+  help: Fetch a random cat fact.
 
 openai.chat:
   url: $!OPENAI_URL/v1/chat/completions
@@ -19,6 +22,7 @@ openai.chat:
       "think": false,
       "stream": false
     }
+  help: Create an OpenAI-compatible chat completion. Requires OPENAI_URL, OPENAI_API_KEY, MODEL, and PROMPT.
 
 ollama.chat:
   url: http://localhost:11434/api/generate
@@ -31,10 +35,12 @@ ollama.chat:
       "think": false,
       "stream": false
     }
+  help: Generate a response from a local Ollama server. Requires MODEL and PROMPT.
 
 echo.ws:
   url: wss://echo-websocket.fly.dev/.ws
   body: $!PROMPT
+  help: Send PROMPT to an echo WebSocket.
 
 openrouter.chat:
   url: https://openrouter.ai/api/v1/chat/completions
@@ -47,6 +53,7 @@ openrouter.chat:
       "messages": [{"role": "user", "content": "$OPTIONAL_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
       , "provider": {"order": ["$PROVIDER"]}
     }
+  help: Create an OpenRouter chat completion. Requires API_KEY, MODEL, and PROMPT.
 
 cerebras.chat:
   url: https://api.cerebras.net/v1/chat/completions
@@ -58,9 +65,33 @@ cerebras.chat:
       "model": "$!MODEL",
       "messages": [{"role": "system", "content": "$SYSTEM_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
     }
+  help: Create a Cerebras chat completion. Requires API_KEY, MODEL, and PROMPT.
 
 ollama.localmodels:
   url: http://localhost:11434/api/tags
   method: GET
   headers:
     Authorization: "Bearer $!API_KEY"
+  help: List models available from a local Ollama server.
+
+turboff.chat:
+  url: http://127.0.0.1:8080/v1/chat/completions
+  method: POST
+  headers:
+    Content-Type: application/json
+  body: |
+   {
+    "model": "gemma-4-26b-a4b-it",
+    "messages": [{"role": "user", "content": "$!PROMPT"}],
+    "temperature": 0,
+    "max_completion_tokens": 32
+   }
+  help: |
+    Create a TurboFF chat completion. Requires API_KEY, MODEL, and PROMPT.
+
+    Start the server locally using:
+      swift build -c release --product TurboFieldfareServer
+      .build/release/TurboFieldfareServer \
+        --model scratch/gemma4.gturbo \
+        --port 8080 \
+        --max-context 16384

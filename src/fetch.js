@@ -24,7 +24,7 @@ const isReadableFile = (path) => {
 };
 const resolveDefaultConfigPath = () => [userConfigPath(), bundledConfigPath].find(isReadableFile);
 
-const runJq = (q, input) => {
+export const runJq = (q, input) => {
   const r = spawnSync('jq', ['-r', q.startsWith('.') ? q : `.${q}`], { input, encoding: 'utf8', maxBuffer: 50 * 1024 * 1024 });
   if (r.error || r.status) throw new Error(r.stderr || r.error || `jq exited ${r.status}`);
   return r.stdout;

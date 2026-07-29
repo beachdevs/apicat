@@ -75,6 +75,12 @@ apic ls httpbin
 # grep, but friendlier
 apic help httpbin
 
+# show help defined for one API
+apic openai.chat --help
+
+# catfact.getFact uses its jq field to print only the fact
+apic catfact.getFact
+
 # bring your own config
 apic -config ./custom.yaml ls
 apic -config ./custom.yaml httpbin.get
@@ -166,6 +172,14 @@ httpbin.get:
   url: https://httpbin.org/get
   method: GET
   headers: {}
+  help: Send a GET request to httpbin.org/get.
+
+catfact.getFact:
+  url: https://catfact.ninja/fact
+  method: GET
+  headers: {}
+  jq: .fact
+  help: Fetch a random cat fact.
 
 openai.chat:
   url: $!OPENAI_URL/v1/chat/completions
@@ -183,3 +197,7 @@ echo.ws:
   url: wss://echo-websocket.fly.dev/.ws
   body: $!PROMPT
 ```
+
+Use an optional `help` string to describe an API. `apic service.name --help` prints it and exits without making a request.
+
+Use an optional `jq` expression to filter an HTTP JSON response with `jq -r`. For example, `jq: .fact` makes `apic catfact.getFact` print only the fact instead of the complete response. This requires the `jq` command to be installed.

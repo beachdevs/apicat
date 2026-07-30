@@ -115,7 +115,7 @@ apic openrouter.chat \
 apic httpbin.get
 ```
 
-Parameters automatically fall back to matching environment variables when possible.
+Variables automatically fall back to matching environment variables when possible.
 
 ## 💻 Use It From Code
 
@@ -153,6 +153,28 @@ const chat = await fetchApi('openai', 'chat', {
 console.log(await chat.json());
 ```
 
+For an OpenRouter chat completion, pass the values referenced by the
+`openrouter.chat` definition in `vars`:
+
+```javascript
+import { fetchApi } from 'apicat';
+
+const res = await fetchApi('openrouter', 'chat', {
+  vars: {
+    API_KEY: process.env.OPENROUTER_API_KEY,
+    MODEL: 'openai/gpt-4.1-mini',
+    OPTIONAL_PROMPT: 'Be concise.',
+    PROMPT: 'Give me one interesting cat fact.',
+    PROVIDER: 'openai'
+  }
+});
+
+if (!res.ok) throw new Error(`OpenRouter request failed: ${res.status} ${await res.text()}`);
+
+const data = await res.json();
+console.log(data.choices[0].message.content);
+```
+
 `fetchApi` returns a normal Fetch `Response`, so you can use `status`, `ok`, `headers`, `text()`, `json()`, and the rest of the usual response methods.
 
 You can also import the CLI runner directly:
@@ -183,6 +205,7 @@ catfact.getFact:
 
 openai.chat:
   url: $!OPENAI_URL/v1/chat/completions
+  method: POST
   headers:
     Authorization: "Bearer $!OPENAI_API_KEY"
   body: |

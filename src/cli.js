@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { createInterface } from 'node:readline/promises';
 import { fetchApi, fetchWS, getApi, getApis, getFlow, parseJsonResponse, runJq } from './fetch.js';
 import { ensureUserConfig, defaultUserConfigPath, defaultBundledConfigPath } from './install.js';
 import { parseYaml } from './yaml.js';
@@ -11,20 +12,15 @@ export const usage = `
 🔌 ${c.bold}apicat${c.reset} ${c.dim}v${version} — call APIs (${c.cyan}apic${c.reset})${c.reset}
 
 ${c.bold}Commands${c.reset}
-  ${c.cyan}ls|list${c.reset} [pattern]       List APIs (e.g. ${c.dim}apic list "openrouter"${c.reset})
-  ${c.cyan}update${c.reset}                  Copy latest published ${c.dim}.apicat${c.reset} to ${c.dim}~/.apicat${c.reset}
-  ${c.cyan}help${c.reset} <pattern>          Show matching lines (e.g. ${c.dim}apic help "httpbin*"${c.reset})
-  ${c.green}<service.name>${c.reset} [k=v …]  Call API with optional params
+  ${c.green}apic <service.name>${c.reset} [k=v …]  Call API with optional params
+  ${c.cyan}apic ls|list${c.reset} [pattern]       List APIs
+  ${c.cyan}apic update${c.reset}                  Copy latest published ${c.dim}.apicat${c.reset} to ${c.dim}~/.apicat${c.reset}
+  ${c.cyan}apic <service.name> --help${c.reset}   Show help for this api call
 
 ${c.bold}Options${c.reset}
-  ${c.cyan}-time${c.reset}                   Print request duration
-  ${c.cyan}-debug${c.reset}                  Print fetch request/response info (e.g. ${c.dim}apic -debug httpbin.get${c.reset})
-  ${c.cyan}-config${c.reset} <path>          Use custom config file (e.g. ${c.dim}apic -config ./custom.yaml httpbin.get${c.reset})
-
-${c.bold}Example${c.reset}
-  ${c.dim}apic openrouter.chat API_KEY=$OPENROUTER_API_KEY MODEL=openai/gpt-4o-mini PROMPT=Hello${c.reset}
-  ${c.dim}apic -time httpbin.get${c.reset}
-  ${c.dim}apic -debug httpbin.get${c.reset}
+  ${c.cyan}apic <service.name> --time${c.reset}          Show request duration
+  ${c.cyan}apic <service.name> --debug${c.reset}         Show fetch request/response info
+  ${c.cyan}apic --config <path> httpbin.get${c.reset}    Use custom config file instead of ${c.dim}~/.apicat${c.reset}
 `;
 
 export const formatResponse = (text, jq) => jq ? runJq(jq, text).trimEnd() : JSON.stringify(parseJsonResponse(text), null, 2);
@@ -47,12 +43,28 @@ export async function runCli(raw = process.argv.slice(2), io = {}) {
   const printConfig = () => { const p = cfg(configPath); if (p) err(configPath ? 'config:' : hasUser() ? 'user:   ' : 'bundled:', p); };
   const search = (rx) => { const p = cfg(configPath); if (p && fs.existsSync(p)) for (const l of fs.readFileSync(p, 'utf8').split('\n')) if (rx.test(l)) out(l); };
   const update = async () => {
+    if (hasUser()) {
+      if (!process.stdin.isTTY || !process.stdout.isTTY) {
+        throw new Error(`Refusing to overwrite ${userConfigPath} without confirmation. Run \`apic update\` in an interactive terminal.`);
+      }
+      const rl = createInterface({ input: process.stdin, output: process.stdout });
+      try {
+        const answer = (await rl.question(`This will overwrite ${userConfigPath}. Are you sure? [y/N] `)).trim().toLowerCase();
+        if (answer !== 'y' && answer !== 'yes') {
+          out('Update cancelled.');
+          return false;
+        }
+      } finally {
+        rl.close();
+      }
+    }
     const r = await fetch(publishedConfigUrl);
     if (!r.ok) throw new Error(`Failed to download ${publishedConfigUrl}: ${r.status} ${r.statusText}`);
     const text = await r.text();
     parseYaml(text);
     fs.writeFileSync(userConfigPath, text, 'utf8');
     out(userConfigPath);
+    return true;
   };
 
   if (error) return err(error), 1;

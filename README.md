@@ -25,20 +25,15 @@ $ apic httpbin.get
 🔌 apicat v0.3.11 — call APIs (apic)
 
 Commands
-  ls|list [pattern]       List APIs (e.g. apic list "openrouter")
-  update                  Copy latest published .apicat to ~/.apicat
-  help <pattern>          Show matching lines (e.g. apic help "httpbin*")
-  <service.name> [k=v …]  Call API with optional params
+  apic <service.name> [k=v …]  Call API with optional params
+  apic ls|list [pattern]       List APIs (e.g. apic list "openrouter")
+  apic update                  Copy latest published .apicat to ~/.apicat
+  apic <service.name> --help   Show help for this api call
 
 Options
-  -time                   Print request duration
-  -debug                  Print fetch request/response info (e.g. apic -debug httpbin.get)
-  -config <path>          Use custom config file (e.g. apic -config ./custom.yaml httpbin.get)
-
-Example
-  apic openrouter.chat API_KEY=$OPENROUTER_API_KEY MODEL=openai/gpt-4o-mini PROMPT=Hello
-  apic -time httpbin.get
-  apic -debug httpbin.get
+  apic <service.name> --time          Show request duration
+  apic <service.name> --debug         Show fetch request/response info
+  apic --config <path> httpbin.get    Use custom config file instead of ~/.apicat
 ```
 
 ## 🤖 apicat for your LLM
@@ -96,6 +91,7 @@ apic httpbin.get --time
 apic httpbin.get --debug
 
 # refresh ~/.apicat from the published apicat.yaml
+# prompts before replacing an existing config
 apic update
 ```
 

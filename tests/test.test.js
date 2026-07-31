@@ -29,6 +29,17 @@ test('api help prints the YAML help text without making a request', async () => 
   assert.deepStrictEqual(output, ['Send a GET request to httpbin.org/get.']);
 });
 
+test('update refuses to overwrite an existing config without confirmation', async () => {
+  const errors = [];
+  const code = await runCli(['update'], {
+    err: value => errors.push(value),
+    userConfigPath: config
+  });
+
+  assert.strictEqual(code, 1);
+  assert.deepStrictEqual(errors, [`Refusing to overwrite ${config} without confirmation. Run \`apic update\` in an interactive terminal.`]);
+});
+
 test('jq API field prints raw selected output', () => {
   const catfact = getApis(config).find(api => api.id === 'catfact.getFact');
 

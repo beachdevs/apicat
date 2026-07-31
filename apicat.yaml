@@ -13,6 +13,7 @@ catfact.getFact:
 
 openai.chat:
   url: $!OPENAI_URL/v1/chat/completions
+  method: POST
   headers:
     Authorization: "Bearer $!OPENAI_API_KEY"
   body: |
@@ -116,6 +117,6 @@ tavily.search:
     { "query": "$!QUERY", "max_results": "3" }
   help: Set TAVILY_API_KEY in env. Get key at tavily.com.
 
-searxng.query:
+searxng.search:
   url: $!SEARXNG_BASE_URL/search?q=$!QUERY&format=json
   help: Set up a server github.com/0x96f/searxng

@@ -5,13 +5,6 @@ import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { parseYaml } from './yaml.js';
 
-const ALIASES = {
-  API_KEY: ['OPENAI_API_KEY', 'OPENROUTER_API_KEY', 'CEREBRAS_API_KEY'],
-  OPENAI_API_KEY: ['API_KEY'],
-  OPENROUTER_API_KEY: ['API_KEY'],
-  CEREBRAS_API_KEY: ['API_KEY']
-};
-
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const userConfigPath = () => join(homedir(), '.apicat');
 const bundledConfigPath = join(root, 'apicat.yaml');
@@ -64,7 +57,6 @@ const parseTxt = (c) => {
 const sub = (s, v = {}) => s?.replace?.(/(\$\$)|(\$!?)([A-Za-z_]\w*)/g, (_, esc, p, k) => {
   if (esc) return '$';
   let val = v[k] ?? process.env[k];
-  if (val == null && ALIASES[k]) val = ALIASES[k].map(a => v[a] ?? process.env[a]).find(x => x != null);
   if (p.includes('!') && val == null) throw new Error(`Variable ${k} is required`);
   return val ?? '';
 }) ?? s;

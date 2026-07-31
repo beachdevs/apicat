@@ -1,7 +1,7 @@
 {
   "name": "apicat",
-  "version": "0.3.10",
-  "description": "Quick and flexible API tool for CLI and Bun",
+  "version": "0.3.11",
+  "description": "Quick and flexible API tool for Node.js CLI and JavaScript",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/beachdevs/apicat.git"
@@ -25,8 +25,14 @@
   ],
   "type": "module",
   "scripts": {
-    "test": "bun test"
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "yaml": "^2.9.0"
+  }
 }

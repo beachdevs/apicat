@@ -16,8 +16,6 @@ or install:
 
 ```bash
 npm install -g apicat
-# or
-bun add -g apicat
 
 $ apic ls
 $ apic httpbin.get
@@ -123,8 +121,6 @@ Install it locally if you want to import it:
 
 ```bash
 npm install apicat
-# or
-bun add apicat
 ```
 
 Then:

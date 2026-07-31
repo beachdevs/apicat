@@ -53,6 +53,7 @@ openrouter.chat:
       "messages": [{"role": "user", "content": "$OPTIONAL_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
       , "provider": {"order": ["$PROVIDER"]}
     }
+  jq: .choices[0].message.content
   help: Create an OpenRouter chat completion. Requires API_KEY, MODEL, and PROMPT.
 
 cerebras.chat:
@@ -84,7 +85,7 @@ turboff.chat:
     "model": "gemma-4-26b-a4b-it",
     "messages": [{"role": "user", "content": "$!PROMPT"}],
     "temperature": 0,
-    "max_completion_tokens": 32
+    "max_completion_tokens": 10240
    }
   help: |
     Create a TurboFF chat completion. Requires API_KEY, MODEL, and PROMPT.
@@ -95,3 +96,26 @@ turboff.chat:
         --model scratch/gemma4.gturbo \
         --port 8080 \
         --max-context 16384
+
+discord.post:
+  url: $!DISCORD_WEBHOOK_URL
+  method: POST
+  headers:
+    Content-Type: application/json
+  body: |
+   { "content": "$!POST" }
+  help: Discord Server Settings to create the Webhook URL, it should be in env var DISCORD_WEBHOOK_URL
+
+tavily.search:
+  url: https://api.tavily.com/search
+  method: POST
+  headers:
+    Content-Type: application/json
+    Authorization: Bearer $!TAVILY_API_KEY
+  body: |
+    { "query": "$!QUERY", "max_results": "3" }
+  help: Set TAVILY_API_KEY in env. Get key at tavily.com.
+
+searxng.query:
+  url: $!SEARXNG_BASE_URL/search?q=$!QUERY&format=json
+  help: Set up a server github.com/0x96f/searxng

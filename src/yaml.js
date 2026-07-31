@@ -1,9 +1,6 @@
-const yaml = globalThis.Bun?.YAML;
+import { parse } from 'yaml';
 
-export const parseYaml = (input) => {
-  if (!yaml?.parse) throw new Error('YAML parsing requires Bun runtime');
-  return yaml.parse(input);
-};
+export const parseYaml = (input) => parse(input);
 
 const isPlainKey = (v) => /^[A-Za-z0-9_.-]+$/.test(v);
 const needsQuotedString = (v) => {

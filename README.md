@@ -12,7 +12,7 @@ Keep your API definitions in YAML, then list them, inspect them, and fire them o
 npx apicat <service.name> KEY=VALUE
 ```
 
-Or install it globally:
+Or install it locally. Use ```apic``` instead of ```npx apicat```.
 
 ```bash
 npm install -g apicat
@@ -45,7 +45,6 @@ If you want a model to learn your API definitions, tell it:
 `Learn api definitions from https://unpkg.com/apicat`
 
 
-
 Variables can be defined in the call or will be used if named the same in env.
 
 API IDs use `<service>.<name>` form, like `httpbin.get`, `openai.chat`, or `echo.ws`.
@@ -57,7 +56,6 @@ API IDs use `<service>.<name>` form, like `httpbin.get`, `openai.chat`, or `echo
 - HTTP and WebSocket support
 - Variables with `$VAR` and required variables with `$!VAR`
 - Works as a CLI, a library, and an exported CLI module
-- No package dependencies or lockfile
 
 ## 🧠 How It Thinks
 
@@ -75,29 +73,16 @@ apic ls
 # show help for an API
 apic openai.chat --help
 
-# use a jq field to filter results
-catfact.getFact:
-  url: https://catfact.ninja/fact
-  method: GET
-  headers: {}
-  jq: .fact
-  help: Fetch a random cat fact.
-
 # use a different config
-apic -config ./custom.yaml ls
+apic --config ./custom.yaml ls
 
 # time or debug your calls
 apic httpbin.get --time
 apic httpbin.get --debug
 
 # refresh ~/.apicat from the published apicat.yaml
-# prompts before replacing an existing config
 apic update
-```
 
-## 🪄 A Few Good Tricks
-
-```bash
 # OpenAI-compatible chat
 apic openai.chat \
   OPENAI_URL=https://api.openai.com \
@@ -110,7 +95,6 @@ apic openrouter.chat \
   API_KEY=$OPENROUTER_API_KEY \
   MODEL=openrouter/auto \
   PROMPT="Say hello"
-
 ```
 
 ## 💻 Use It From Code
@@ -168,5 +152,8 @@ if (!res.ok) throw new Error(`OpenRouter request failed: ${res.status} ${await r
 const data = await res.json();
 console.log(data.choices[0].message.content);
 ```
+
+## YAML config
+Simple! See apicat.yaml.
 
 `fetchApi` returns a normal Fetch `Response`, so you can use `status`, `ok`, `headers`, `text()`, `json()`, and the rest of the usual response methods.

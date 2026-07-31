@@ -131,8 +131,7 @@ const chat = await fetchApi('openai', 'chat', {
 console.log(await chat.json());
 ```
 
-For an OpenRouter chat completion, pass the values referenced by the
-`openrouter.chat` definition in `vars`:
+For an OpenRouter chat completion, pass the values referenced by the `openrouter.chat` definition in `vars`:
 
 ```javascript
 import { fetchApi } from 'apicat';
@@ -140,10 +139,9 @@ import { fetchApi } from 'apicat';
 const res = await fetchApi('openrouter', 'chat', {
   vars: {
     API_KEY: process.env.OPENROUTER_API_KEY,
-    MODEL: 'openai/gpt-4.1-mini',
+    MODEL: 'openrouter/auto',
     OPTIONAL_PROMPT: 'Be concise.',
-    PROMPT: 'Give me one interesting cat fact.',
-    PROVIDER: 'openai'
+    PROMPT: 'Give me one interesting cat fact.'
   }
 });
 
@@ -155,5 +153,3 @@ console.log(data.choices[0].message.content);
 
 ## YAML config
 Simple! See apicat.yaml.
-
-`fetchApi` returns a normal Fetch `Response`, so you can use `status`, `ok`, `headers`, `text()`, `json()`, and the rest of the usual response methods.

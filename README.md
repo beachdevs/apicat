@@ -40,14 +40,9 @@ Options
 
 No installation required.
 
-If you want a model to learn your API definitions, tell it:
+If you want an AI to learn your API definitions, tell it:
 
 `Learn api definitions from https://unpkg.com/apicat`
-
-
-Variables can be defined in the call or will be used if named the same in env.
-
-API IDs use `<service>.<name>` form, like `httpbin.get`, `openai.chat`, or `echo.ws`.
 
 ## 🎉 API goodness
 
@@ -60,6 +55,10 @@ API IDs use `<service>.<name>` form, like `httpbin.get`, `openai.chat`, or `echo
 ## 🧠 How It Thinks
 
 On first interactive run, it can copy the bundled `apicat.yaml` to `~/.apicat`. Edit to your liking.
+
+Variables can be defined in the call or will be used if named the same in env.
+
+API IDs use `<service>.<name>` form, like `httpbin.get`, `openai.chat`, or `echo.ws`.
 
 ## 🧰 CLI Cheatsheet
 

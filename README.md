@@ -97,6 +97,31 @@ apic openrouter.chat \
   PROMPT="Say hello"
 ```
 
+## Key Value Parameters
+
+```
+apic openrouter.chat MODEL="openrouter/auto" PROMPT="Reply with only: ok"
+
+Values will automatically be used if they exist in env. e.g. API_KEY
+
+export API_KEY=...
+
+# In the yaml config
+openrouter.chat:
+  url: https://openrouter.ai/api/v1/chat/completions
+  method: POST
+  headers:
+    Authorization: "Bearer $!API_KEY"
+  body: |
+    {
+      "model": "$!MODEL",
+      "messages": [{"role": "user", "content": "$OPTIONAL_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
+      , "provider": {"order": ["$PROVIDER"]}
+    }
+  jq: .choices[0].message.content
+  help: Create an OpenRouter chat completion. Requires API_KEY, MODEL, and PROMPT.
+```
+
 ## 💻 Use It From Code
 
 Install it locally if you want to import it:

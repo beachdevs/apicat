@@ -12,7 +12,7 @@ Keep your API definitions in YAML, then list them, inspect them, and fire them o
 npx apicat <service.name> KEY=VALUE
 ```
 
-Or install it globally:
+Or install it locally. Use ```apic``` instead of ```npx apicat```.
 
 ```bash
 npm install -g apicat
@@ -40,15 +40,9 @@ Options
 
 No installation required.
 
-If you want a model to learn your API definitions, tell it:
+If you want an AI to learn your API definitions, tell it:
 
 `Learn api definitions from https://unpkg.com/apicat`
-
-
-
-Variables can be defined in the call or will be used if named the same in env.
-
-API IDs use `<service>.<name>` form, like `httpbin.get`, `openai.chat`, or `echo.ws`.
 
 ## 🎉 API goodness
 
@@ -57,11 +51,14 @@ API IDs use `<service>.<name>` form, like `httpbin.get`, `openai.chat`, or `echo
 - HTTP and WebSocket support
 - Variables with `$VAR` and required variables with `$!VAR`
 - Works as a CLI, a library, and an exported CLI module
-- No package dependencies or lockfile
 
 ## 🧠 How It Thinks
 
 On first interactive run, it can copy the bundled `apicat.yaml` to `~/.apicat`. Edit to your liking.
+
+Variables can be defined in the call or will be used if named the same in env.
+
+API IDs use `<service>.<name>` form, like `httpbin.get`, `openai.chat`, or `echo.ws`.
 
 ## 🧰 CLI Cheatsheet
 
@@ -75,29 +72,16 @@ apic ls
 # show help for an API
 apic openai.chat --help
 
-# use a jq field to filter results
-catfact.getFact:
-  url: https://catfact.ninja/fact
-  method: GET
-  headers: {}
-  jq: .fact
-  help: Fetch a random cat fact.
-
 # use a different config
-apic -config ./custom.yaml ls
+apic --config ./custom.yaml ls
 
 # time or debug your calls
 apic httpbin.get --time
 apic httpbin.get --debug
 
 # refresh ~/.apicat from the published apicat.yaml
-# prompts before replacing an existing config
 apic update
-```
 
-## 🪄 A Few Good Tricks
-
-```bash
 # OpenAI-compatible chat
 apic openai.chat \
   OPENAI_URL=https://api.openai.com \
@@ -110,7 +94,31 @@ apic openrouter.chat \
   API_KEY=$OPENROUTER_API_KEY \
   MODEL=openrouter/auto \
   PROMPT="Say hello"
+```
 
+## Key Value Parameters
+
+```
+apic openrouter.chat MODEL="openrouter/auto" PROMPT="Reply with only: ok"
+
+Values will automatically be used if they exist in env. e.g. API_KEY
+
+export API_KEY=...
+
+# In the yaml config
+openrouter.chat:
+  url: https://openrouter.ai/api/v1/chat/completions
+  method: POST
+  headers:
+    Authorization: "Bearer $!API_KEY"
+  body: |
+    {
+      "model": "$!MODEL",
+      "messages": [{"role": "user", "content": "$OPTIONAL_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
+      , "provider": {"order": ["$PROVIDER"]}
+    }
+  jq: .choices[0].message.content
+  help: Create an OpenRouter chat completion. Requires API_KEY, MODEL, and PROMPT.
 ```
 
 ## 💻 Use It From Code
@@ -147,8 +155,7 @@ const chat = await fetchApi('openai', 'chat', {
 console.log(await chat.json());
 ```
 
-For an OpenRouter chat completion, pass the values referenced by the
-`openrouter.chat` definition in `vars`:
+For an OpenRouter chat completion, pass the values referenced by the `openrouter.chat` definition in `vars`:
 
 ```javascript
 import { fetchApi } from 'apicat';
@@ -156,10 +163,9 @@ import { fetchApi } from 'apicat';
 const res = await fetchApi('openrouter', 'chat', {
   vars: {
     API_KEY: process.env.OPENROUTER_API_KEY,
-    MODEL: 'openai/gpt-4.1-mini',
+    MODEL: 'openrouter/auto',
     OPTIONAL_PROMPT: 'Be concise.',
-    PROMPT: 'Give me one interesting cat fact.',
-    PROVIDER: 'openai'
+    PROMPT: 'Give me one interesting cat fact.'
   }
 });
 
@@ -169,4 +175,5 @@ const data = await res.json();
 console.log(data.choices[0].message.content);
 ```
 
-`fetchApi` returns a normal Fetch `Response`, so you can use `status`, `ok`, `headers`, `text()`, `json()`, and the rest of the usual response methods.
+## YAML config
+Simple! See apicat.yaml.

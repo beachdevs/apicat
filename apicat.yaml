@@ -58,10 +58,11 @@ openrouter.chat:
   help: Create an OpenRouter chat completion. Requires OPENROUTER_API_KEY, OPENROUTER_MODEL, and PROMPT.
 
 cerebras.chat:
-  url: https://api.cerebras.net/v1/chat/completions
+  url: https://api.cerebras.ai/v1/chat/completions
   method: POST
   headers:
     Authorization: "Bearer $!CEREBRAS_API_KEY"
+    Content-Type: application/json
   body: |
     {
       "model": "$!CEREBRAS_MODEL",

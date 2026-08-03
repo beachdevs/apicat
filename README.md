@@ -155,6 +155,16 @@ const chat = await fetchApi('openai', 'chat', {
 console.log(await chat.json());
 ```
 
+To load API definitions from a specific file, pass its path as `configPath`:
+
+```javascript
+const res = await fetchApi('httpbin', 'get', {
+  configPath: './custom.yaml'
+});
+```
+
+Without `configPath`, apicat uses `~/.apicat` when present, otherwise its bundled `apicat.yaml`.
+
 For an OpenRouter chat completion, pass the values referenced by the `openrouter.chat` definition in `vars`:
 
 ```javascript

@@ -26,9 +26,10 @@ openai.chat:
   help: Create an OpenAI-compatible chat completion. Requires OPENAI_URL, OPENAI_API_KEY, MODEL, and PROMPT.
 
 ollama.chat:
-  url: http://localhost:11434/api/generate
+  method: POST
+  url: http://localhost:11434/api/chat
   headers:
-    Content-Type: "application/json"
+    Content-Type: application/json
   body: |
     {
       "model": "$!OLLAMA_MODEL",
@@ -58,9 +59,10 @@ openrouter.chat:
   help: Create an OpenRouter chat completion. Requires OPENROUTER_API_KEY, OPENROUTER_MODEL, and PROMPT.
 
 cerebras.chat:
-  url: https://api.cerebras.net/v1/chat/completions
+  url: https://api.cerebras.ai/v1/chat/completions
   method: POST
   headers:
+    Content-Type: application/json
     Authorization: "Bearer $!CEREBRAS_API_KEY"
   body: |
     {
@@ -126,4 +128,4 @@ inception.chat:
     Content-Type: application/json
     Authorization: Bearer $!INCEPTION_API_KEY
   body: |
-    { "model": "mercury-2", "reasoning_effort": "$REASONING_EFFORT", "messages": [{"role":"user", "content":"$!PROMPT"}] }
+    { "model": "mercury-2", "reasoning_effort": "$!REASONING_EFFORT", "messages": [{"role":"user", "content":"$!PROMPT"}] }

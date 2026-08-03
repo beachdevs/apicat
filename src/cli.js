@@ -97,12 +97,17 @@ export async function runCli(raw = process.argv.slice(2), io = {}) {
   if (debug) opts.debug = true;
   try {
     const t0 = time ? process.hrtime.bigint() : null;
-    if (isWs) await fetchWS(service, name, { ...opts, onMessage: (_msg, ctx) => out(ctx.raw) });
-    else {
-      const text = await (await fetchApi(service, name, opts)).text();
+    let elapsed;
+    if (isWs) {
+      await fetchWS(service, name, { ...opts, onMessage: (_msg, ctx) => out(ctx.raw) });
+      if (t0) elapsed = (Number(process.hrtime.bigint() - t0) / 1e6).toFixed(0);
+    } else {
+      const response = await fetchApi(service, name, opts);
+      if (t0) elapsed = (Number(process.hrtime.bigint() - t0) / 1e6).toFixed(0);
+      const text = await response.text();
       out(formatResponse(text, api?.jq));
     }
-    if (t0) err(`\x1b[90m%ims\x1b[0m`, (Number(process.hrtime.bigint() - t0) / 1e6).toFixed(0));
+    if (elapsed) err(`\x1b[90m%ims\x1b[0m`, elapsed);
     return 0;
   } catch (e) {
     err(e.message);

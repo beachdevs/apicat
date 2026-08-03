@@ -31,7 +31,7 @@ ollama.chat:
     Content-Type: "application/json"
   body: |
     {
-      "model": "$!MODEL",
+      "model": "$!OLLAMA_MODEL",
       "messages": [{"role": "system", "content": "$SYSTEM_PROMPT"}, {"role": "user", "content": "$!PROMPT"}],
       "think": false,
       "stream": false
@@ -50,30 +50,28 @@ openrouter.chat:
     Authorization: "Bearer $!API_KEY"
   body: |
     {
-      "model": "$!MODEL",
+      "model": "$!OPENROUTER_MODEL",
       "messages": [{"role": "user", "content": "$OPTIONAL_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
       , "provider": {"order": ["$PROVIDER"]}
     }
   jq: .choices[0].message.content
-  help: Create an OpenRouter chat completion. Requires API_KEY, MODEL, and PROMPT.
+  help: Create an OpenRouter chat completion. Requires OPENROUTER_API_KEY, OPENROUTER_MODEL, and PROMPT.
 
 cerebras.chat:
   url: https://api.cerebras.net/v1/chat/completions
   method: POST
   headers:
-    Authorization: "Bearer $!API_KEY"
+    Authorization: "Bearer $!CEREBRAS_API_KEY"
   body: |
     {
-      "model": "$!MODEL",
+      "model": "$!CEREBRAS_MODEL",
       "messages": [{"role": "system", "content": "$SYSTEM_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
     }
-  help: Create a Cerebras chat completion. Requires API_KEY, MODEL, and PROMPT.
+  help: Create a Cerebras chat completion. Requires CEREBRAS_API_KEY, CEREBRAS_MODEL, and PROMPT.
 
 ollama.localmodels:
   url: http://localhost:11434/api/tags
   method: GET
-  headers:
-    Authorization: "Bearer $!API_KEY"
   help: List models available from a local Ollama server.
 
 turboff.chat:

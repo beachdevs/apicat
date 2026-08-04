@@ -1,6 +1,6 @@
 {
   "name": "apicat",
-  "version": "0.3.16",
+  "version": "0.3.17",
   "description": "Quick and flexible API tool for Node.js CLI and JavaScript",
   "repository": {
     "type": "git",
@@ -31,7 +31,7 @@
     "node": ">=22"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "yaml": "^2.9.0"
   }

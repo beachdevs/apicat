@@ -1,14 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { formatResponse, runCli } from '../src/cli.js';
-import { getApis } from '../src/fetch.js';
+import { fetchApi, getApis, getRequest } from '../src/fetch.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const config = join(root, 'apicat.yaml');
+const uploadConfig = join(root, 'tests/fixtures/upload.yaml');
+const uploadFile = join(root, 'tests/fixtures/upload-body.txt');
 const { version } = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 
 test('cli usage includes the package version', async () => {
@@ -45,6 +48,65 @@ test('jq API field prints raw selected output', () => {
 
   assert.strictEqual(catfact.jq, '.fact');
   assert.strictEqual(formatResponse('{"fact":"Cats purr."}', catfact.jq), 'Cats purr.');
+});
+
+test('file uploads read the configured local file as bytes', async (t) => {
+  const originalFetch = globalThis.fetch;
+  let request;
+  globalThis.fetch = async (url, init) => {
+    request = { url, ...init };
+    return new Response('ok');
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  const req = getRequest('test', 'raw', { FILE: uploadFile }, uploadConfig);
+  assert.strictEqual(req.file, uploadFile);
+  await fetchApi('test', 'raw', { vars: { FILE: uploadFile }, configPath: uploadConfig });
+
+  assert.strictEqual(request.url, 'https://upload.example/raw');
+  assert.ok(Buffer.isBuffer(request.body));
+  assert.strictEqual(request.body.toString(), 'binary-safe upload body\n');
+});
+
+test('multipart uploads support file and text fields', async (t) => {
+  const originalFetch = globalThis.fetch;
+  let request;
+  globalThis.fetch = async (url, init) => {
+    request = { url, ...init };
+    return new Response('ok');
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  await fetchApi('test', 'multipart', {
+    vars: { FILE: uploadFile, DESCRIPTION: 'An upload' },
+    configPath: uploadConfig
+  });
+
+  assert.strictEqual(request.url, 'https://upload.example/multipart');
+  assert.ok(request.body instanceof FormData);
+  assert.strictEqual(await request.body.get('document').text(), 'binary-safe upload body\n');
+  assert.strictEqual(request.body.get('document').name, 'upload-body.txt');
+  assert.strictEqual(request.body.get('description'), 'An upload');
+});
+
+test('download output writes response bytes to FILE_PATH', async (t) => {
+  const originalFetch = globalThis.fetch;
+  const tempDir = mkdtempSync(join(tmpdir(), 'apicat-download-'));
+  const filePath = join(tempDir, 'download.bin');
+  globalThis.fetch = async () => new Response(new Uint8Array([0, 1, 2, 255]));
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  const output = [];
+  const code = await runCli(['--config', uploadConfig, 'test.download', `FILE_PATH=${filePath}`], {
+    out: value => output.push(value)
+  });
+
+  assert.strictEqual(code, 0);
+  assert.deepStrictEqual([...readFileSync(filePath)], [0, 1, 2, 255]);
+  assert.deepStrictEqual(output, [filePath]);
 });
 
 test('cli.js module and apicli executable list APIs', async () => {

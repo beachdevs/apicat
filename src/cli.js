@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { createInterface } from 'node:readline/promises';
-import { fetchApi, fetchWS, getApi, getApis, getFlow, parseJsonResponse, runJq } from './fetch.js';
+import { fetchApi, fetchWS, getApi, getApis, getFlow, getRequest, parseJsonResponse, runJq } from './fetch.js';
 import { ensureUserConfig, defaultUserConfigPath, defaultBundledConfigPath } from './install.js';
 import { parseYaml } from './yaml.js';
 
@@ -92,8 +92,9 @@ export async function runCli(raw = process.argv.slice(2), io = {}) {
   if (help) return out(base?.help ?? api?.help ?? steps[0]?.help ?? 'No help available.'), 0;
   const isWs = steps.length || String(api?.url ?? '').startsWith('ws');
   const hasBody = api?.body != null && String(api.body).trim() !== '';
+  const hasUpload = api?.file != null || api?.multipart != null;
   const jsonPost = api?.method === 'POST' && (typeof api.headers === 'string' ? /json|^bearer /i.test(api.headers) : Object.entries(api?.headers || {}).some(([k, v]) => k.toLowerCase() === 'content-type' && String(v).toLowerCase().includes('json')));
-  const opts = isWs || hasBody ? { vars: params, configPath: p } : jsonPost ? { body: JSON.stringify(params), configPath: p } : { vars: params, configPath: p };
+  const opts = isWs || hasBody || hasUpload ? { vars: params, configPath: p } : jsonPost ? { body: JSON.stringify(params), configPath: p } : { vars: params, configPath: p };
   if (debug) opts.debug = true;
   try {
     const t0 = time ? process.hrtime.bigint() : null;
@@ -104,8 +105,14 @@ export async function runCli(raw = process.argv.slice(2), io = {}) {
     } else {
       const response = await fetchApi(service, name, opts);
       if (t0) elapsed = (Number(process.hrtime.bigint() - t0) / 1e6).toFixed(0);
-      const text = await response.text();
-      out(formatResponse(text, api?.jq));
+      const { output } = getRequest(service, name, params, p);
+      if (output && response.ok) {
+        fs.writeFileSync(output, Buffer.from(await response.arrayBuffer()));
+        out(output);
+      } else {
+        const text = await response.text();
+        out(formatResponse(text, api?.jq));
+      }
     }
     if (elapsed) err(`\x1b[90m%ims\x1b[0m`, elapsed);
     return 0;

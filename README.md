@@ -187,3 +187,49 @@ console.log(data.choices[0].message.content);
 
 ## YAML config
 Simple! See apicat.yaml.
+
+### File uploads
+
+Use `file` to send a local file as the raw request body. `FILE` is a convention; any substituted variable can provide the path.
+
+```yaml
+cloudflare.r2Upload:
+  url: https://api.cloudflare.com/client/v4/accounts/$!CLOUDFLARE_ACCOUNT_ID/r2/buckets/$!CLOUDFLARE_BUCKET/objects/$!FILE_NAME
+  method: PUT
+  file: $!FILE
+  headers:
+    Authorization: Bearer $!CLOUDFLARE_API_KEY
+    Content-Type: $CONTENT_TYPE
+```
+
+Use a scoped Cloudflare API token for `CLOUDFLARE_API_KEY`. `FILE` is the local path and `FILE_NAME` is the R2 object key.
+
+Downloads write response bytes to `FILE_PATH`:
+
+```yaml
+cloudflare.r2Download:
+  url: https://api.cloudflare.com/client/v4/accounts/$!CLOUDFLARE_ACCOUNT_ID/r2/buckets/$!CLOUDFLARE_BUCKET/objects/$!FILE_NAME
+  method: GET
+  headers:
+    Authorization: Bearer $!CLOUDFLARE_API_KEY
+  output: $!FILE_PATH
+```
+
+```bash
+apic cloudflare.r2Download FILE_NAME=logo.png FILE_PATH=./downloaded-logo.png
+```
+
+For `multipart/form-data` APIs, use `multipart`. A field containing `file` becomes a file part; all other fields are sent as text.
+
+```yaml
+example.multipartUpload:
+  url: https://example.com/upload
+  method: POST
+  multipart:
+    document:
+      file: $!FILE
+      content_type: $CONTENT_TYPE
+    description: $DESCRIPTION
+```
+
+You may set `filename` alongside `file` and `content_type`; otherwise apicat uses the local filename. Do not set a multipart `Content-Type` header manually—apicat supplies the required boundary.

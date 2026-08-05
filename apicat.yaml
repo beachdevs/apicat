@@ -11,6 +11,22 @@ catfact.getFact:
   jq: .fact
   help: Fetch a random cat fact.
 
+cloudflare.r2Upload:
+  url: https://api.cloudflare.com/client/v4/accounts/$!CLOUDFLARE_ACCOUNT_ID/r2/buckets/$!CLOUDFLARE_BUCKET/objects/$!FILE_NAME
+  method: PUT
+  headers:
+    Authorization: Bearer $!CLOUDFLARE_API_KEY
+  file: $!FILE
+  help: Upload a file to Cloudflare R2. Requires CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_BUCKET, CLOUDFLARE_API_KEY, FILE_NAME, and FILE.
+
+cloudflare.r2Download:
+  url: https://api.cloudflare.com/client/v4/accounts/$!CLOUDFLARE_ACCOUNT_ID/r2/buckets/$!CLOUDFLARE_BUCKET/objects/$!FILE_NAME
+  method: GET
+  headers:
+    Authorization: Bearer $!CLOUDFLARE_API_KEY
+  output: $!FILE_PATH
+  help: Download a Cloudflare R2 object to FILE_PATH. Requires CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_BUCKET, CLOUDFLARE_API_KEY, FILE_NAME, and FILE_PATH.
+
 openai.chat:
   url: $!OPENAI_URL/v1/chat/completions
   method: POST

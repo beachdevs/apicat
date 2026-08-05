@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { parseYaml } from './yaml.js';
@@ -96,7 +96,7 @@ export function getRequest(s, n, vars = {}, p) {
   const api = getApi(s, n, p);
   if (!api) throw new Error(`Unknown API: ${s}.${n}`);
   const v = { ...vars }, provider = v.PROVIDER ?? process.env.PROVIDER;
-  let { url, method, headers, body } = api;
+  let { url, method, headers, body, file, multipart, output } = api;
   url = sub(url, v);
   if (typeof headers === 'string' && headers.startsWith('BEARER ')) {
     headers = { Authorization: `Bearer ${sub(headers.slice(7).trim(), v)}`, 'Content-Type': 'application/json' };
@@ -108,8 +108,36 @@ export function getRequest(s, n, vars = {}, p) {
     body = provider ? body.replace(pb, pb.replace('$PROVIDER', provider)) : body.replace(pb, '');
     body = sub(body, v);
   }
-  return { url, method, headers, body };
+  file = sub(file, v);
+  multipart = walk(multipart, v);
+  output = sub(output, v);
+  return { url, method, headers, body, file, multipart, output };
 }
+
+const getFileBody = (path) => {
+  if (!path) return undefined;
+  try {
+    return fs.readFileSync(path);
+  } catch (error) {
+    throw new Error(`Unable to read upload file ${path}: ${error.message}`);
+  }
+};
+
+const getMultipartBody = (fields) => {
+  if (!fields || typeof fields !== 'object') return undefined;
+  const form = new FormData();
+  for (const [name, value] of Object.entries(fields)) {
+    if (value && typeof value === 'object' && value.file != null) {
+      const path = value.file;
+      const bytes = getFileBody(path);
+      const type = value.content_type || 'application/octet-stream';
+      form.append(name, new Blob([bytes], { type }), value.filename || basename(path));
+    } else {
+      form.append(name, value == null ? '' : String(value));
+    }
+  }
+  return form;
+};
 
 const buildWsRequest = (api, vars = {}) => {
   if (!api) throw new Error('Missing API definition');
@@ -155,7 +183,8 @@ export async function fetchApi(s, n, opts = {}) {
       Object.entries(req.headers || {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
     if (req.body) console.error('\x1b[90m> body: %s\x1b[0m', req.body.slice(0, 200) + (req.body.length > 200 ? '...' : ''));
   }
-  const res = await fetch(req.url, { method: req.method, headers: req.headers, body: req.body || undefined });
+  const body = req.multipart ? getMultipartBody(req.multipart) : req.file ? getFileBody(req.file) : req.body || undefined;
+  const res = await fetch(req.url, { method: req.method, headers: req.headers, body });
   if (debug) {
     console.error('\n\x1b[90m< %s %s\x1b[0m', res.status, res.statusText);
     for (const [k, v] of res.headers.entries()) console.error('\x1b[90m< %s: %s\x1b[0m', k, v);

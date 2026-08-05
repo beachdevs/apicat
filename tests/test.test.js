@@ -130,6 +130,17 @@ test('cli.js module and apicli executable list APIs', async () => {
 
   assert.strictEqual(executable.status, 0);
   assert.strictEqual(executable.stderr, '');
-  assert.match(executable.stdout, /^\n\x1b\[36mhttpbin\.get\x1b\[0m/m);
+  assert.match(executable.stdout, /^\n\x1b\[36mcatfact\.getFact\x1b\[0m/m);
   assert.match(executable.stdout, /\n\n$/);
+});
+
+test('list output is alphabetically ordered by API ID', async () => {
+  const output = [];
+  const code = await runCli(['--config', config, 'ls'], { out: value => output.push(value) });
+  const ids = output
+    .filter(value => value.startsWith('\x1b[36m'))
+    .map(value => value.replace(/^\x1b\[36m|\x1b\[0m$/g, ''));
+
+  assert.strictEqual(code, 0);
+  assert.deepStrictEqual(ids, [...ids].sort((a, b) => a.localeCompare(b)));
 });

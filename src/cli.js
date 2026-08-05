@@ -73,7 +73,7 @@ export async function runCli(raw = process.argv.slice(2), io = {}) {
   if (!arg) return out(usage), 0;
   if (arg === 'ls' || arg === 'list') {
     out('');
-    for (const a of getApis(cfg(configPath))) {
+    for (const a of getApis(cfg(configPath)).sort((a, b) => (a.id ?? `${a.service}.${a.name}`).localeCompare(b.id ?? `${b.service}.${b.name}`))) {
       const id = a.id ?? `${a.service}.${a.name}`;
       if (re(pattern).test(id)) out(`${c.cyan}${id}${c.reset}`);
     }

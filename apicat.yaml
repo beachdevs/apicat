@@ -85,6 +85,7 @@ cerebras.chat:
       "model": "$!CEREBRAS_MODEL",
       "messages": [{"role": "system", "content": "$SYSTEM_PROMPT"}, {"role": "user", "content": "$!PROMPT"}]
     }
+  jq: .choices[0].message.content
   help: Create a Cerebras chat completion. Requires CEREBRAS_API_KEY, CEREBRAS_MODEL, and PROMPT.
 
 ollama.localmodels:

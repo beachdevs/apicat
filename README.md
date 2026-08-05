@@ -94,6 +94,9 @@ apic openrouter.chat \
   API_KEY=$OPENROUTER_API_KEY \
   MODEL=openrouter/auto \
   PROMPT="Say hello"
+
+# macOS: use clipboard text as a prompt
+PROMPT="$(pbpaste)" apic <service.name>
 ```
 
 ## Key Value Parameters

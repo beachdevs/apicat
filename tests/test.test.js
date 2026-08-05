@@ -50,6 +50,18 @@ test('jq API field prints raw selected output', () => {
   assert.strictEqual(formatResponse('{"fact":"Cats purr."}', catfact.jq), 'Cats purr.');
 });
 
+test('JSON request bodies escape multiline variable values', () => {
+  const prompt = 'First line\nA "quoted" path: C:\\temp';
+  const req = getRequest('ollama', 'chat', {
+    OLLAMA_MODEL: 'phi4:latest',
+    PROMPT: prompt
+  }, config);
+
+  const body = JSON.parse(req.body);
+  assert.strictEqual(body.model, 'phi4:latest');
+  assert.strictEqual(body.messages[1].content, prompt);
+});
+
 test('file uploads read the configured local file as bytes', async (t) => {
   const originalFetch = globalThis.fetch;
   let request;

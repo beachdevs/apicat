@@ -54,10 +54,22 @@ const parseTxt = (c) => {
   }) };
 };
 
-const sub = (s, v = {}) => s?.replace?.(/(\$\$)|(\$!?)([A-Za-z_]\w*)/g, (_, esc, p, k) => {
+const isInJsonString = (source, end) => {
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < end; i++) {
+    if (escaped) escaped = false;
+    else if (source[i] === '\\') escaped = true;
+    else if (source[i] === '"') inString = !inString;
+  }
+  return inString;
+};
+
+const sub = (s, v = {}, json = false) => s?.replace?.(/(\$\$)|(\$!?)([A-Za-z_]\w*)/g, (_, esc, p, k, offset, source) => {
   if (esc) return '$';
   let val = v[k] ?? process.env[k];
   if (p.includes('!') && val == null) throw new Error(`Variable ${k} is required`);
+  if (json && val != null && isInJsonString(source, offset)) return JSON.stringify(String(val)).slice(1, -1);
   return val ?? '';
 }) ?? s;
 
@@ -106,7 +118,7 @@ export function getRequest(s, n, vars = {}, p) {
     body = String(body).trim();
     const pb = ', "provider": {"order": ["$PROVIDER"]}';
     body = provider ? body.replace(pb, pb.replace('$PROVIDER', provider)) : body.replace(pb, '');
-    body = sub(body, v);
+    body = sub(body, v, true);
   }
   file = sub(file, v);
   multipart = walk(multipart, v);
